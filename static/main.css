@@ -1,0 +1,158 @@
+body {
+    background-color: #bcd9f5;
+  }
+  /* nav */
+  .card {
+    max-width: 25rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.5rem;
+  }
+  
+  a.active {
+    border-bottom: 2px solid #55c57a;
+  }
+  
+  .nav-link {
+    color: rgb(110, 110, 110);
+    font-weight: 500;
+  }
+  .nav-link:hover {
+    color: #55c57a;
+  }
+  
+  .nav-pills .nav-link.active {
+    color: black;
+    background-color: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-weight: 600;
+  }
+  
+  .tab-content {
+    padding-bottom: 1.3rem;
+  }
+  
+  .form-control {
+    background-color: rgb(241, 243, 247);
+    border: none;
+  }
+  
+  /* 3nd card */
+  span {
+    margin-left: 0.5rem;
+    padding: 1px 10px;
+    color: white;
+    background-color: rgb(143, 143, 143);
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  
+  .third {
+    padding: 0 1.5rem 0 1.5rem;
+  }
+  
+  label {
+    font-weight: 500;
+    color: rgb(104, 104, 104);
+  }
+  
+  .btn-success {
+    float: right;
+  }
+  
+  .form-control:focus {
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 7px rgba(0, 0, 0, 0.2);
+  }
+  
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-indent: 1px;
+    text-overflow: "";
+  }
+  
+  /* 1st card */
+  
+  ul {
+    list-style: none;
+    margin-top: 1rem;
+    padding-inline-start: 0;
+  }
+  
+  .search {
+    padding: 0 1rem 0 1rem;
+  }
+  
+  .ccontent li .wrapp {
+    padding: 0.3rem 1rem 0.001rem 1rem;
+  }
+  
+  .ccontent li .wrapp div {
+    font-weight: 600;
+  }
+  
+  .ccontent li .wrapp p {
+    font-weight: 360;
+  } 
+  
+  .ccontent li:hover {
+    background-color: rgb(232, 232, 232);
+  }
+  
+  /* 2nd card */
+  
+  .addinfo {
+    padding: 0 1rem;
+  }
+  
+
+
+/* Status LED */
+
+  .led-box {
+    height: 30px;
+    width: 25%;
+    margin: 10px 0px;
+  }
+
+  .led-red {
+    margin: 0 auto;
+    width: 24px;
+    height: 24px;
+    background-color: #F00;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #441313 0 -1px 9px, rgba(255, 0, 0, 0.5) 0 2px 12px;
+  }
+
+  .led-green {
+    margin: 0 auto;
+    width: 24px;
+    height: 24px;
+    background-color: #ABFF00;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #89FF00 0 2px 12px;
+  }
+
+/* schedule matrix */
+  
+  table {
+    border-collapse: collapse;
+    user-select: none;
+  }
+  td {
+    width: 30px;
+    height: 30px;
+    border: 1px solid black;
+    cursor: pointer;
+    padding: 5px;
+  }
+  td[data-selected="true"] {
+    background-color: lightblue;
+  }
+  th {
+    width: 30px;
+    height: 30px;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    text-align: center;
+  }

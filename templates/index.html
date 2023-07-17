@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='font-awesome.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap4-toggle.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap4-toggle.min.js') }}"></script>
+  
+    <title>autorecord</title>
+
+</head>
+<body>
+  <style>
+    .container {
+      display: flex;
+    }
+
+    .status {
+      width: 100%;
+      text-align: center;
+      line-height: 15px;
+      padding: 1em;
+      outline: 2px solid rgb(75, 75, 75);
+    }
+  </style>
+
+<div id="container" class="container card shadow d-flex justify-content-center mt-5">
+    <!-- nav options -->
+    <ul class="nav nav-pills mb-3 shadow-sm" id="pills-tab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="pills-status-tab" data-toggle="pill" href="#pills-status" role="tab" aria-controls="pills-status" aria-selected="true">Status</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="pills-schedule-tab" data-toggle="pill" href="#pills-schedule" role="tab" aria-controls="pills-schedule" aria-selected="false">Zeitplan</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="pills-admin-tab" data-toggle="pill" href="#pills-admin" role="tab" aria-controls="pills-admin" aria-selected="false">Admin</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="pills-log-tab" data-toggle="pill" href="#pills-log" role="tab" aria-controls="pills-log" aria-selected="false" onclick="populateLog()">Log</a>
+      </li>
+    </ul>
+
+    <!-- content -->
+    <div class="tab-content" id="pills-tabContent p-3">
+      <!-- 1st card -->
+      <div class="tab-pane fade show active" id="pills-status" role="tabpanel" aria-labelledby="pills-status-tab">
+        <div class="container">
+          <div class="status" id="standby">Standby</div>
+          <div class="status" id="start">Start</div>
+          <div class="status" id="run">Aufnahme</div>
+          <div class="status" id="stop">Stop</div>
+        </div>
+        <br>
+        <div class="container">
+          <button class="btn btn-success" onclick="call_split()">jetzt teilen</button>
+        </div>
+        <ul class="ccontent">
+          <li>
+            <div class="wrapp">
+              <label>Aufnahme in Ordner:</label>
+              <p id="foldername"></p>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <label>Aufnahme in Datei:</label>
+              <p id="filename"></p>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <label>Aufgenommene Zeit:</label>
+              <sapn id="filetime"></sapn>
+              <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="fileprogressbar" role="progressbar" style="width: 0%"></div>
+              </div>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <label>Speichermodus:</label>
+              <p id="storage_mode"></p>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <label>Speicherpuffer:</label>
+              <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="buffer" role="progressbar" style="width: 0%"></div>
+              </div>
+              <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" id="audiochunk" role="progressbar" style="width: 0%"></div>
+              </div>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <label>Pakete verloren:</label>
+              <p id="lostpackages"></p>
+              <hr>
+            </div>
+          </li>
+          <li>
+            <div class="wrapp">
+              <lable>Mischpult:</lable>                
+              <div class="led-box">
+                <div id="gpio"></div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <!-- 2nd card -->
+      <div class="tab-pane fade" id="pills-schedule" role="tabpanel" aria-labelledby="pills-schedule-tab">
+        <div class="form-group addinfo">
+          <label for="schedule_plan">Zeitplan</label>
+          <table id="schedule_plan">
+            <thead>
+              <tr>
+                <th></th>
+                <!-- Generating the columns dynamically -->
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Generating the rows and cells using JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        <hr>
+        <div class="form-group addinfo">
+          <label for="feiertage">Feiertage.</label>
+          <p>An Feiertagen wird ganztägig aufgenommen unabhängig vom Zeitplan.</p>
+          <table id="feiertage">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Feiertag</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JSON data will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- 3nd card -->
+      <div class="tab-pane fade third" id="pills-admin" role="tabpanel" aria-labelledby="pills-admin-tab">
+        <div class="form">
+          <div class="form-group">
+            <label for="sample_rate">Abtastrate</label>
+            <select class="form-control round" id="sample_rate">
+              <option class="">44100</option>
+              <option class="">48000</option>
+              <option class="">96000</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bit_depth">Bittiefe</label>
+            <select class="form-control round" id="bit_depth">
+              <option class="">16 bit</option>
+              <option class="">24 bit</option>
+            </select>
+          </div>
+          <!--div class="form-group">
+            <label>nfs host</label>
+            <input class="form-control amount" id="nfs_host" />
+          </div-->
+          <div class="form-group">
+            <label>maximale Dateigröße (Sekunden)</label>
+            <input class="form-control amount" type="number" id="file_limit" />
+          </div>
+          <div class="form-group">
+            <label>allgemeinder Zustand:</label>
+            <p id="powersupply"></p>
+            <hr>
+          </div>
+          <div class="form-group">
+            <p><span>i</span> "Programm neu starten" bewirkt kurze Unterbrechung der Aufnahme</p>
+            <button class="btn btn-success" onclick="set_settings()">Einstellung setzen</button>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-danger" onclick="call_exit()">Programm neu starten</button>
+          </div>
+          <button class="btn" id="plus_button" onclick="show_reboot()" style="float:right;">+</button>
+          <div style="display:none" id="hidden_reboot">
+            <hr>
+            <div class="form-group">
+              <p><span>i</span> "Gerät neu starten" bewirkt lange Unterbrechung der Aufnahme</p>
+              <button class="btn btn-danger" onclick="call_reboot()">Gerät neu starten</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 4nd card -->
+      <div class="tab-pane fade" id="pills-log" role="tabpanel" aria-labelledby="pills-log-tab">
+        <div class="form-group addinfo">
+          <label for="log">Log</label>
+          <textarea class="form-control" id="log" rows="15" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script src="{{ url_for('static', filename='matrix.js') }}"></script>
+
+</body>
