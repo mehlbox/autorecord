@@ -14,7 +14,7 @@ function get_data() {
             }
             /* status */
             for (const [key, value] of Object.entries(data.status)) {
-                if (key == 'buffer' | key == 'audiochunk' | key == 'fileprogressbar'){
+                if ( key == 'fileprogressbar'){ //key == 'buffer' | key == 'audiochunk' |
                     document.getElementById(key).style.width = value + '%'
                 } else {
                     try {
@@ -232,7 +232,7 @@ menuItems.forEach(function(item) {
             update = false;    
         }
         if (item.id == "pills-log-tab") {
-            container.style.maxWidth = 50 + 'rem';
+            container.style.maxWidth = 70 + 'rem';
             update = false;    
         }
     });

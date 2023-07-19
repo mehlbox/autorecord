@@ -32,7 +32,7 @@ class manage_config:
         self.__load__('storage_mode'   , 'offline')
         self.__load__('network_path'   , '/volume1/autorecord')
         self.__load__('network_ip'     , '10.1.0.11')
-        self.__load__('initial_status' , 'standby') # wait -> start -> run -> stop -> wait
+        self.__load__('initial_status' , 'standby') # standby -> start -> run -> stop -> standby
 
         self.__load__('num_channels', 2)
         self.__load__('bit_depth', '16 bit')

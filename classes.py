@@ -34,13 +34,6 @@ class filemaker:
         self.sw = debouncePin(self.config.get_element('gpio_pin'), self.config.get_element('gpio_debouncing'), self.config.get_element('gpio_invert'))
         self.sw.check_forever()
 
-        self.audiocard = aa.PCM(aa.PCM_CAPTURE, aa.PCM_NONBLOCK ,
-            device = self.config.get_element('device'),
-            channels = self.config.get_element('num_channels'),
-            rate = self.config.get_element('sample_rate'),
-            format = self.config.get_element('audio_format'),
-            periodsize=self.config.get_element('period_size'))
-       
     def get_sw(self):
         return self.sw.read()
 
@@ -54,26 +47,26 @@ class filemaker:
     def read_forever(self):
         """read from audiocard to ram, loop forever to prevent audiocard cache to fill up.
         if the cache of the audiocard is filled, audio samples will get lost"""
-        
-        if self.lostpackages > 100:
-            m.log('killing all python instances because of too many package loss')
-            os.system("killall python")
 
-        try:
-            l, data = self.audiocard.read()
-            self.buffer = l
-        except Exception as error:
-            m.log('error: could not read from audiocard')
-            m.log(error)
-        else:
-            if self.status == 'start' or self.status == 'run':
-                if l == -32: # Package lost, no data
-                    self.lostpackages += 1
-                    m.log('warning: lost a audio package')
-                else:
-                    if l: # l is not empty
-                        self.audio = self.audio + data # accumulate audio stream
-                        # m.log('accumulate audio stream ...')
+        # if self.lostpackages > 100:
+        #     m.log('killing all python instances because of too many package loss')
+        #     os.system("killall python")
+
+        if self.status == 'run':
+            try:
+                l, data = self.audiocard.read()
+                self.buffer = l
+            except Exception as error:
+                m.log('error: could not read from audiocard')
+                m.log(error)
+
+            if l == -32: # Package lost, no data
+                self.lostpackages += 1
+                m.log('warning: lost a audio package')
+            else:
+                if l: # l is not empty
+                    self.audio = self.audio + data # accumulate audio stream
+                    # m.log('accumulate audio stream ...')
 
         threading.Timer(self.check_in_time, self.read_forever).start()
 
@@ -86,6 +79,10 @@ class filemaker:
             self.filetime = int(time() - self.start_time)
         else:
             self.filetime = 0
+            
+        if self.status == 'run' and self.audio == b'':
+            # self.status = 'stop'
+            m.log('warning: empty stream.')
 
         if previous_storage_mode == 'online' and self.config.get_element('storage_mode') == 'offline': # from online to offline
             self.close_file()
@@ -101,16 +98,20 @@ class filemaker:
 
         if self.status == 'standby' and self.sw.get_status() == 'start' and f.is_allowed():
             self.status = 'start'
-            m.log('switch wait to start')
+            m.log('switch standby to start')
 
-        if self.status == 'start' and self.audio != b'':
+        if self.status == 'start': # and self.audio != b'':
+            self.do_maintenance = False # During boot it is set to True. Don't do maintenance when recording.
+            m.log('open audiocard')
+            self.audiocard = aa.PCM(aa.PCM_CAPTURE, aa.PCM_NONBLOCK ,
+                                    device = self.config.get_element('device'),
+                                    channels = self.config.get_element('num_channels'),
+                                    rate = self.config.get_element('sample_rate'),
+                                    format = self.config.get_element('audio_format'),
+                                    periodsize=self.config.get_element('period_size'))
             self.new_file()
             self.status = 'run'
             m.log('switch start to run')
-
-        if self.status == 'run' and self.audio == b'':
-            self.status = 'stop'
-            m.log('switch run to stop')
 
         if self.status == 'run':
             self.write_file()
@@ -121,8 +122,10 @@ class filemaker:
 
         if self.status == 'stop':
             self.close_file()
+            m.log('close audiocard')
+            self.audiocard.close()
             self.status = 'standby'
-            m.log('switch stop to wait')
+            m.log('switch stop to standby')
             self.do_maintenance = True
 
         if self.actual_filetime >= self.config.get_element('file_limit'):
@@ -205,8 +208,8 @@ class filemaker:
             self.maxaudiochunk = sizeofaudio
         data = {
             'status' : self.status,
-            'buffer' : int(self.buffer / self.config.get_element('period_size') * 100),
-            'audiochunk' : sizeofaudio / self.maxaudiochunk * 100,
+            # 'buffer' : int(self.buffer / self.config.get_element('period_size') * 100),
+            # 'audiochunk' : sizeofaudio / self.maxaudiochunk * 100,
             'lostpackages' : self.lostpackages,
             'fileprogressbar' : round(self.filetime / self.config.get_element('file_limit') * 100, 2)
         }
