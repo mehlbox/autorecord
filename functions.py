@@ -71,7 +71,7 @@ def setup_record_path(config, express = False):
             cc_folder(config.get_element('recpath_online') )
             subprocess.Popen('mount -t nfs '+config.get_element('network_ip')+':'+config.get_element('network_path')+' '+config.get_element('recpath_online'), shell=True)
             sleep(1)
-            online_write_check()
+            online_write_check(config)
     else:
         express = False # reset to default
 
@@ -97,10 +97,12 @@ def deltree(target):
         m.log(f'folder {target} deleted')
         return True
 
+
 def cleanup(recpath):
     """delete folder older than 14 days"""
 
     if recpath != '':
+        m.log('cleanup...')
         folder_list = os.listdir(recpath)
 
         # remove aditional folder from list
@@ -123,6 +125,7 @@ def cleanup(recpath):
             else:
                 folder_list.remove(folder_list[0])
 
+
 def maintenance(config):
     """move files and folders created during a offline session"""
     m.log(f'maintenance start')
@@ -132,7 +135,7 @@ def maintenance(config):
         cc_folder(config.get_element('recpath_online'))
         subprocess.Popen('mount -t nfs '+config.get_element('network_ip')+':'+config.get_element('network_path')+' '+config.get_element('recpath_online'), shell=True)
         sleep(1)
-        online_write_check()
+        online_write_check(config)
 
     if os.path.isdir(config.get_element('recpath_offline')):
         m.log('syncronize offline files to online path')

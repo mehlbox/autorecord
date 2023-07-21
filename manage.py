@@ -28,11 +28,8 @@ class manage_config:
 
         self.__load__('recpath_online' , '/mnt/autorecord')
         self.__load__('recpath_offline', '/mnt/autorecord-offline')
-        self.__load__('recpath'        , '')
-        self.__load__('storage_mode'   , 'offline')
         self.__load__('network_path'   , '/volume1/autorecord')
         self.__load__('network_ip'     , '10.1.0.11')
-        self.__load__('initial_status' , 'standby') # standby -> start -> run -> stop -> standby
 
         self.__load__('num_channels', 2)
         self.__load__('bit_depth', '16 bit')
@@ -44,6 +41,11 @@ class manage_config:
         self.__load__('gpio_pin', 22)
         self.__load__('gpio_invert', False)
         self.__load__('gpio_debouncing', 30) # time in seconds
+        
+        # always default
+        self.config_data['recpath'] = ''
+        self.config_data['storage_mode'] = 'offline'
+        self.config_data['initial_status'] = 'standby' # standby -> start -> run -> stop -> standby
 
 
         if self.config_data['bit_depth'] == '16 bit':

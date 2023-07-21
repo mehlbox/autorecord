@@ -34,7 +34,7 @@ def export_data():
 
 @app.route('/feiertage', methods=['GET'])
 def feiertage():
-    return f.is_allowed(True)
+    return f.is_allowed(config, True)
 
 @app.route('/get_log', methods=['GET'])
 def get_log():
@@ -120,6 +120,7 @@ if __name__ == '__main__':
         import manage as m
 
         config = m.manage_config()
+        
         # webserver
         webserver = threading.Thread(target=lambda: app.run(host='0.0.0.0', debug=True, use_reloader=False, port=config.get_element('http_port')))
         webserver.start()

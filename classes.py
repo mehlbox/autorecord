@@ -25,15 +25,16 @@ class filemaker:
         self.lostpackages = 0
         self.status = self.config.get_element('initial_status')
         self.check_in_time = self.config.get_element('check_in_time')
-        self.read_forever()
         self.maxaudiochunk = 0
         self.audio = b''
         self.express = ''
         self.do_maintenance = True
-
+        
         self.sw = debouncePin(self.config.get_element('gpio_pin'), self.config.get_element('gpio_debouncing'), self.config.get_element('gpio_invert'))
         self.sw.check_forever()
-
+        
+        self.read_forever()
+        
     def get_sw(self):
         return self.sw.read()
 
@@ -79,13 +80,15 @@ class filemaker:
         else:
             self.filetime = 0
 
-        if previous_storage_mode == 'online' and self.config.get_element('storage_mode') == 'offline': # from online to offline
+        # change of online/offline status during recording
+        if self.status == 'run' and previous_storage_mode == 'online' and self.config.get_element('storage_mode') == 'offline': # from online to offline
             self.close_file()
             self.express = True
             self.status = 'start'
             m.log('express switch from online to offline')
 
-        if previous_storage_mode == 'offline' and self.config.get_element('storage_mode') == 'online': # from offline to online
+        # change of online/offline status during recording
+        if self.status == 'run' and previous_storage_mode == 'offline' and self.config.get_element('storage_mode') == 'online': # from offline to online
             self.close_file()
             self.express = True
             self.status = 'start'
@@ -173,12 +176,13 @@ class filemaker:
         self.filename = ''
         self.filetime = 0
         self.actual_filetime = 0
-        try:
-            self.file.close()
-            self.file.__del__()
-        except Exception as error:
-            m.log('error: could not close file')
-            m.log(error)
+        if hasattr(self, "file"):
+            try:
+                self.file.close()
+                self.file.__del__()
+            except Exception as error:
+                m.log('error: could not close file')
+                m.log(error)
 
     def get_fileinfo(self):
         """return dictionary with fileinfos"""
