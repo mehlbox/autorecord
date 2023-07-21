@@ -81,6 +81,14 @@ class manage_config:
 
     def get_all(self):
         return self.config_data
+    
+    def get_status(self):
+        new_data = {}
+        new_data['bit_depth']           = self.config_data['bit_depth']
+        new_data['sample_rate']         = self.config_data['sample_rate']
+        new_data['file_limit']          = self.config_data['file_limit']
+        new_data['storage_mode']        = self.config_data['storage_mode']
+        return new_data
 
     def set_element(self, element, config):
         if self.config_data[element] != config: # prevent regular write action

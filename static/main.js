@@ -174,11 +174,13 @@ async function fetchJSONData(fetch_path) {
     }
 
 // Function to populate the table with the JSON data
-async function populateFeiertage() {
-    var jsonData = await fetchJSONData("feiertage");
-    var table = document.getElementById("feiertage");
+async function populateSchedule() {
 
-    for (var date in jsonData) {
+    var jsonData = await fetchJSONData("get_schedule");
+    var table = document.getElementById("feiertage");
+    drawMatrix(jsonData.schedule_matrix);
+
+    for (var date in jsonData.holidays) {
         var row = document.createElement("tr");
 
         var dateCell = document.createElement("td");
@@ -186,7 +188,7 @@ async function populateFeiertage() {
         dateCell.appendChild(dateText);
 
         var holidayCell = document.createElement("td");
-        var holidayText = document.createTextNode(jsonData[date]);
+        var holidayText = document.createTextNode(jsonData.holidays[date]);
         holidayCell.appendChild(holidayText);
 
         row.appendChild(dateCell);
@@ -240,5 +242,3 @@ menuItems.forEach(function(item) {
 
 
 get_data();
-
-populateFeiertage();

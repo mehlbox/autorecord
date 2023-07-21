@@ -158,31 +158,17 @@ function sendMatrixToServer() {
     });
 }
 
-// Function to retrieve the matrix data from the server and update the table
-function getMatrixFromServer() {
-    fetch('/matrix', {
-      method: 'GET'
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Process the received JSON data and update the table
-      for (const rowKey in data) {
-        const row = data[rowKey];
-        for (const columnKey in row) {
-          const value = row[columnKey];
-          const cell = cells[rowKey][columnKey];
-          cell.dataset.selected = value;
-        }
+// Function to update matrix on page
+function drawMatrix(data) {
+    // Process the received JSON data and update the table
+    for (const rowKey in data) {
+      const row = data[rowKey];
+      for (const columnKey in row) {
+        const value = row[columnKey];
+        const cell = cells[rowKey][columnKey];
+        cell.dataset.selected = value;
       }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
+    }
   }
-  
-
-
-getMatrixFromServer();
-
 // Attach mouse event listeners to the table
 const table = document.querySelector('table');

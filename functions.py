@@ -195,15 +195,22 @@ def is_allowed(config, liste=False):
             return True
         return False
 
+    schedule_matrix = config.get_element('schedule_matrix')
+    weekdays = config.get_element('weekdays')
+    
     if liste: # print whole list
-        new_liste = {}
+        new_matrix = {}
+        for key, value in config.get_element('schedule_matrix').items():
+            index = weekdays.index(key)
+            new_matrix[index] = value
+            
+        holidays = {}
         for key, value in feiertage.items():
-            new_liste[key.strftime('%d.%m.%Y')] = value
-        return json.dumps(new_liste, indent=4)
+            holidays[key.strftime('%d.%m.%Y')] = value
+        return weekdays, holidays, new_matrix
     else: # print false/true
-        schedule_matrix = config.get_element('schedule_matrix')
         now = dt.datetime.now()
         wd = int(now.weekday())
         hour = int(now.strftime("%H"))
-        weekdays = config.get_element('weekdays')
+        
         return schedule_matrix[weekdays[wd]][hour] or is_feiertag()

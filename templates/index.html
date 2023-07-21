@@ -37,7 +37,7 @@
         <a class="nav-link active" id="pills-status-tab" data-toggle="pill" href="#pills-status" role="tab" aria-controls="pills-status" aria-selected="true">Status</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" id="pills-schedule-tab" data-toggle="pill" href="#pills-schedule" role="tab" aria-controls="pills-schedule" aria-selected="false">Zeitplan</a>
+        <a class="nav-link" id="pills-schedule-tab" data-toggle="pill" href="#pills-schedule" role="tab" aria-controls="pills-schedule" aria-selected="false" onclick="populateSchedule()">Zeitplan</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" id="pills-admin-tab" data-toggle="pill" href="#pills-admin" role="tab" aria-controls="pills-admin" aria-selected="false">Admin</a>
@@ -79,7 +79,7 @@
           <li>
             <div class="wrapp">
               <label>Aufgenommene Zeit:</label>
-              <sapn id="filetime"></sapn>
+              <span id="filetime"></span>
               <div class="progress">
                 <div class="progress-bar progress-bar-striped progress-bar-animated" id="fileprogressbar" role="progressbar" style="width: 0%"></div>
               </div>
@@ -212,8 +212,7 @@
       </div>
     </div>
   </div>
-
-  <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script src="{{ url_for('static', filename='matrix.js') }}"></script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 
 </body>

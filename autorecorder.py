@@ -23,18 +23,19 @@ def main():
 def export_data():
     data = {
         'fileinfo' : wavefile.get_fileinfo(),
-        'storage_mode' : config.get_element('storage_mode'),
         'gpio' : wavefile.get_sw(),
         'status' : wavefile.get_status(),
         'powersupply' : f.check_power_supply(),
-        'config' : config.get_all()
+        'config' : config.get_status()
     }
     return json.dumps(data, indent=4)
 
 
-@app.route('/feiertage', methods=['GET'])
-def feiertage():
-    return f.is_allowed(config, True)
+@app.route('/get_schedule', methods=['GET'])
+def get_schedule():
+    data = {}
+    data['weekdays'], data['holidays'], data['schedule_matrix'] = f.is_allowed(config, True)
+    return json.dumps(data, indent=4)
 
 @app.route('/get_log', methods=['GET'])
 def get_log():
