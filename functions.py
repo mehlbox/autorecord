@@ -6,8 +6,6 @@ import subprocess
 
 import manage as m
 
-config = m.manage_config()
-
 def timer_func(func):
     """use this function to decorate another function to time it"""
     def wrap_func(*args, **kwargs):
@@ -47,7 +45,7 @@ def cc_folder(folder):
     except:
         pass
 
-def online_write_check():
+def online_write_check(config):
     """test if online path is available"""
     
     if os.path.ismount(config.get_element('recpath_online') ):
@@ -62,10 +60,10 @@ def online_write_check():
     config.set_element('storage_mode', 'offline')
     return False
 
-def setup_record_path(express = False):
+def setup_record_path(config, express = False):
     """prepare path for writing"""
 
-    online_write_check()
+    online_write_check(config)
 
     if not express:
         if config.get_element('storage_mode') == 'offline':
@@ -99,9 +97,8 @@ def deltree(target):
         m.log(f'folder {target} deleted')
         return True
 
-def cleanup():
+def cleanup(recpath):
     """delete folder older than 14 days"""
-    recpath = config.get_element('recpath')
 
     if recpath != '':
         folder_list = os.listdir(recpath)
@@ -126,7 +123,7 @@ def cleanup():
             else:
                 folder_list.remove(folder_list[0])
 
-def maintenance():
+def maintenance(config):
     """move files and folders created during a offline session"""
     m.log(f'maintenance start')
 
@@ -145,11 +142,11 @@ def maintenance():
             o.communicate()[0]
             if o.returncode == 0:
                 deltree(config.get_element('recpath_offline'))
-    cleanup()
+    cleanup(config.get_element('recpath'))
     m.log(f'maintenance finished')
 
 
-def is_allowed(liste=False):
+def is_allowed(config, liste=False):
     
     def berechne_ostern(jahr):
         a = jahr % 19
@@ -195,12 +192,12 @@ def is_allowed(liste=False):
             return True
         return False
 
-    if liste:
+    if liste: # print whole list
         new_liste = {}
         for key, value in feiertage.items():
             new_liste[key.strftime('%d.%m.%Y')] = value
         return json.dumps(new_liste, indent=4)
-    else:
+    else: # print false/true
         schedule_matrix = config.get_element('schedule_matrix')
         now = dt.datetime.now()
         wd = int(now.weekday())

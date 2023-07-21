@@ -48,10 +48,7 @@ class filemaker:
         """read from audiocard to ram, loop forever to prevent audiocard cache to fill up.
         if the cache of the audiocard is filled, audio samples will get lost"""
 
-        # if self.lostpackages > 100:
-        #     m.log('killing all python instances because of too many package loss')
-        #     os.system("killall python")
-
+        new_check_in_time = self.check_in_time
         if self.status == 'run':
             try:
                 l, data = self.audiocard.read()
@@ -66,23 +63,21 @@ class filemaker:
             else:
                 if l: # l is not empty
                     self.audio = self.audio + data # accumulate audio stream
-                    # m.log('accumulate audio stream ...')
+                else: # l is empty
+                    m.log('warning: reading from empty audiocard.') # this might crash the audiocard
+                    new_check_in_time = 0.5
 
-        threading.Timer(self.check_in_time, self.read_forever).start()
+        threading.Timer(new_check_in_time, self.read_forever).start()
 
     def autowrite(self):
         """handle command written in status. do this forever."""
         previous_storage_mode = self.config.get_element('storage_mode')
-        f.online_write_check()
+        f.online_write_check(self.config)
 
         if self.status == 'run':
             self.filetime = int(time() - self.start_time)
         else:
             self.filetime = 0
-            
-        if self.status == 'run' and self.audio == b'':
-            # self.status = 'stop'
-            m.log('warning: empty stream.')
 
         if previous_storage_mode == 'online' and self.config.get_element('storage_mode') == 'offline': # from online to offline
             self.close_file()
@@ -95,8 +90,8 @@ class filemaker:
             self.express = True
             self.status = 'start'
             m.log('express switch from offline to online')
-
-        if self.status == 'standby' and self.sw.get_status() == 'start' and f.is_allowed():
+        
+        if self.status == 'standby' and self.sw.get_status() == 'start' and f.is_allowed(self.config):
             self.status = 'start'
             m.log('switch standby to start')
 
@@ -116,7 +111,7 @@ class filemaker:
         if self.status == 'run':
             self.write_file()
 
-        if self.status == 'run' and (self.sw.get_status() == 'stop' or not f.is_allowed()):
+        if self.status == 'run' and (self.sw.get_status() == 'stop' or not f.is_allowed(self.config)):
             self.status = 'stop'
             m.log('switch run to stop')
 
@@ -135,7 +130,7 @@ class filemaker:
 
         if self.do_maintenance:
             self.do_maintenance = False
-            threading.Thread(target=lambda: f.maintenance()).start()
+            threading.Thread(target=lambda: f.maintenance(self.config)).start()
 
         if self.status == 'run':
             callagain = 10
@@ -145,7 +140,7 @@ class filemaker:
 
     def new_file(self):
         """create new file"""
-        self.destination = f.setup_record_path()
+        self.destination = f.setup_record_path(self.config)
         self.foldername = dt.datetime.now().strftime('%Y-%m-%d_%a')
         f.cc_folder(self.destination + '/' + self.foldername)
         self.filename = 'autorec_' + dt.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.wav'
