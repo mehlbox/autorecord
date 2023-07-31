@@ -24,10 +24,13 @@ function get_data() {
             }
             /* config */
             for (const [key, value] of Object.entries(data.config)) {
-
-                try {
-                    document.getElementById(key).value = value
-                } catch(err) {}
+                if ( key == 'storage_mode'){
+                    document.getElementById(key).innerHTML = value
+                } else {
+                    try {
+                        document.getElementById(key).value = value
+                    } catch(err) {}
+                }
             }
             /* main */
             for (const [key, value] of Object.entries(data)) {
