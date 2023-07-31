@@ -106,8 +106,11 @@ class manage_config:
     
 
 def get_log():
-    with open("/audio/autorecord.log", "r") as file:
-        return file.read()
+    try:
+        with open("/audio/autorecord.log", "r") as file:
+            return file.read()
+    except:
+        return 'unable to read logfile !!!'
 
 def log(message):
     now = dt.now().strftime("%a, %d %b %Y %H:%M:%S")

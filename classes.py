@@ -163,19 +163,24 @@ class filemaker:
         self.actual_filetime = 0
         m.log(f'File: "{self.fullpath}" created')
 
+
     def write_file(self):
         """write audio from ram to file"""
-        try:
-            self.file.writeframes(self.audio)
-        except Exception as error:
-            m.log('error: could not write into audio file')
-            m.log(error)
-        self.actual_filetime = int(self.file.tell()/self.config.get_element('sample_rate')) # filetime in seconds
-        if self.actual_filetime >= self.config.get_element('file_limit'):
-            m.log('filelimit reached"') 
-            self.close_file()
-            self.new_file()
-        self.audio = b''
+        if hasattr(self, 'file'):
+            try:
+                self.file.writeframes(self.audio)
+            except Exception as error:
+                m.log('error: could not write into audio file')
+                m.log(error)
+            
+            self.actual_filetime = int(self.file.tell()/self.config.get_element('sample_rate')) # filetime in seconds
+            if self.actual_filetime >= self.config.get_element('file_limit'):
+                m.log('filelimit reached"') 
+                self.close_file()
+                self.new_file()
+            self.audio = b''
+        else:
+            m.log('warning: write_file() called but no opened file available.')
 
     def close_file(self):
         """close file, header will be written"""
@@ -189,6 +194,8 @@ class filemaker:
             except Exception as error:
                 m.log('error: could not close file')
                 m.log(error)
+        else:
+            m.log('warning: close_file() called but no opened file available.')
 
     def get_fileinfo(self):
         """return dictionary with fileinfos"""

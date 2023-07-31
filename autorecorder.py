@@ -56,12 +56,10 @@ def set_config(): # config applies on reboot
 def exit_recorder():
     m.log("called exit")
     autorecorder.status = 'exit'
-    try:
+    
+    if hasattr(autorecorder, 'file'):
         autorecorder.write_file()
         autorecorder.close_file()
-    except Exception as error:
-        m.log('warning: could not close file')
-        m.log(error)
 
     pid = str(os.getpid())
     pid_web = str(webserver.native_id)
