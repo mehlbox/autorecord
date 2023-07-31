@@ -54,25 +54,29 @@ def set_config(): # config applies on reboot
 
 @app.route('/exit', methods=['POST'])
 def exit_recorder():
-    m.log("called exit")
-    autorecorder.status = 'exit'
-    
-    if hasattr(autorecorder, 'file'):
-        autorecorder.write_file()
-        autorecorder.close_file()
+    try:
+        m.log("called exit")
+        autorecorder.status = 'exit'
+        
+        if hasattr(autorecorder, 'file'):
+            autorecorder.write_file()
+            autorecorder.close_file()
 
-    pid = str(os.getpid())
-    pid_web = str(webserver.native_id)
-    #os.system("kill " + pid_web)
-    #os.system("kill " + pid)
-    os.system(f'/audio/restart.py {pid} {pid_web}')
-    return {'status':'OK'}
+        pid = str(os.getpid())
+        pid_web = str(webserver.native_id)
+        r = os.system(f'/audio/restart.py {pid} {pid_web}')
+        return {'status':'OK', 'return_code': r}
+    except Exception as e:
+        return {'status':'error', 'error_message':e}
 
 @app.route('/reboot', methods=['POST'])
 def reboot():
-    m.log('system reboot called')
-    os.system("reboot")
-    return {'status':'OK'}
+    try:
+        m.log('system reboot called')
+        r = os.system("/sbin/reboot")
+        return {'status':'OK', 'return_code': r}
+    except Exception as e:
+        return {'status':'error', 'error_message':e}
 
 @app.route('/call_split', methods=['POST'])
 def call_split():
