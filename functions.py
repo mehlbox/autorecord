@@ -45,37 +45,37 @@ def cc_folder(folder):
     except:
         pass
 
-def online_write_check(config):
+def online_write_check(config, state):
     """test if online path is available"""
     
     if os.path.ismount(config.get_element('recpath_online') ):
         try: # try to write
             open(config.get_element('recpath_online') + '/autorecord_write_check.tmp', 'w')
         except IOError:
-            config.set_element('storage_mode', 'offline')
+            state.set_element('storage_mode', 'offline')
             return False
         else:
-            config.set_element('storage_mode', 'online')
+            state.set_element('storage_mode', 'online')
             return True
-    config.set_element('storage_mode', 'offline')
+    state.set_element('storage_mode', 'offline')
     return False
 
-def setup_record_path(config, express = False):
+def setup_record_path(config, state, express = False):
     """prepare path for writing"""
 
-    online_write_check(config)
+    online_write_check(config, state)
 
     if not express:
-        if config.get_element('storage_mode') == 'offline':
+        if state.get_element('storage_mode') == 'offline':
             m.log('try to mount all mountpoints')
             cc_folder(config.get_element('recpath_online') )
             subprocess.Popen('mount -t nfs '+config.get_element('network_ip')+':'+config.get_element('network_path')+' '+config.get_element('recpath_online'), shell=True)
             sleep(1)
-            online_write_check(config)
+            online_write_check(config, state)
     else:
         express = False # reset to default
 
-    if config.get_element('storage_mode') == 'offline':
+    if state.get_element('storage_mode') == 'offline':
         config.set_element('recpath', config.get_element('recpath_offline'))
     else:
         config.set_element('recpath', config.get_element('recpath_online'))
@@ -126,20 +126,20 @@ def cleanup(recpath):
                 folder_list.remove(folder_list[0])
 
 
-def maintenance(config):
+def maintenance(config, state):
     """move files and folders created during a offline session"""
     m.log(f'maintenance start')
 
-    if config.get_element('storage_mode') == 'offline':
+    if state.get_element('storage_mode') == 'offline':
         m.log('try to mount all mountpoints')
         cc_folder(config.get_element('recpath_online'))
         subprocess.Popen('mount -t nfs '+config.get_element('network_ip')+':'+config.get_element('network_path')+' '+config.get_element('recpath_online'), shell=True)
         sleep(1)
-        online_write_check(config)
+        online_write_check(config, state)
 
     if os.path.isdir(config.get_element('recpath_offline')):
         m.log('syncronize offline files to online path')
-        if config.get_element('storage_mode') == 'online':
+        if state.get_element('storage_mode') == 'online':
             m.log('moving offline files to online path')
             o = subprocess.Popen('rsync -a ' + config.get_element('recpath_offline') + '/* ' + config.get_element('recpath') + '/', shell=True, stdout=subprocess.PIPE)
             o.communicate()[0]

@@ -22,9 +22,9 @@ def main():
 @app.route('/get_all_data', methods=['GET', 'POST'])
 def export_data():
     data = {
-        'fileinfo' : wavefile.get_fileinfo(),
-        'gpio' : wavefile.get_sw(),
-        'status' : wavefile.get_status(),
+        'fileinfo' : autorecorder.get_fileinfo(),
+        'gpio' : autorecorder.get_sw(),
+        'status' : autorecorder.get_status(),
         'powersupply' : f.check_power_supply(),
         'config' : config.get_status()
     }
@@ -55,18 +55,16 @@ def set_config(): # config applies on reboot
 @app.route('/exit', methods=['POST'])
 def exit_recorder():
     m.log("called exit")
-    wavefile.status = 'exit'
+    autorecorder.status = 'exit'
     try:
-        wavefile.write_file()
-        wavefile.close_file()
+        autorecorder.write_file()
+        autorecorder.close_file()
     except Exception as error:
         m.log('warning: could not close file')
         m.log(error)
 
     pid = str(os.getpid())
     pid_web = str(webserver.native_id)
-    #os.system("kill " + pid_web)
-    #os.system("kill " + pid)
     os.system(f'/audio/restart.py {pid} {pid_web}')
     return {'status':'OK'}
 
@@ -79,9 +77,9 @@ def reboot():
 @app.route('/call_split', methods=['POST'])
 def call_split():
     m.log('file split called')
-    wavefile.write_file()
-    wavefile.close_file()
-    wavefile.new_file()
+    autorecorder.write_file()
+    autorecorder.close_file()
+    autorecorder.new_file()
     return {'status':'OK'}
 
 @app.route('/matrix', methods=['get'])
@@ -119,13 +117,14 @@ if __name__ == '__main__':
         import functions as f
         import classes as c
         import manage as m
-
+        
         config = m.manage_config()
+        state = m.manage_state()
         
         # webserver
         webserver = threading.Thread(target=lambda: app.run(host='0.0.0.0', debug=True, use_reloader=False, port=config.get_element('http_port')))
         webserver.start()
 
-        # filemaker
-        wavefile = c.filemaker(config)
-        wavefile.autowrite()
+        # autorecorder class
+        autorecorder = c.filemaker(config, state)
+        autorecorder.autowrite()

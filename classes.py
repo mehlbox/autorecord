@@ -12,8 +12,9 @@ import manage as m
 
 class filemaker:
 
-    def __init__(self, config):
+    def __init__(self, config, state):
         self.config = config
+        self.state = state
         self.buffer = 0
         self.destination = ''
         self.foldername = ''
@@ -29,6 +30,7 @@ class filemaker:
         self.audio = b''
         self.express = ''
         self.do_maintenance = True
+        self.empty_readings = 0
         
         self.sw = debouncePin(self.config.get_element('gpio_pin'), self.config.get_element('gpio_debouncing'), self.config.get_element('gpio_invert'))
         self.sw.check_forever()
@@ -58,22 +60,31 @@ class filemaker:
                 m.log('error: could not read from audiocard')
                 m.log(error)
 
-            if l == -32: # Package lost, no data
-                self.lostpackages += 1
-                m.log('warning: lost a audio package')
-            else:
-                if l: # l is not empty
+            # Empty reading may crash the audiocard. When audiocard is crashed, reboot is required to receive audio data.
+            # The check_in_time is normally calculated. The approach here is to reduce continuous reading in short cycle to prevent a crash of the audiocard.
+            # Downside of this approach is that packages at the start of audio can be lost due to the long reading cycle.
+            if l: # l is not empty
+                if l == -32: # Package lost, no actual data
+                    self.lostpackages += 1
+                    if self.lostpackages == 1:
+                        m.log('Warning: Lost audio packages. Dropouts may occure.')
+                else:
                     self.audio = self.audio + data # accumulate audio stream
-                else: # l is empty
-                    m.log('warning: reading from empty audiocard.') # this might crash the audiocard
-                    new_check_in_time = 0.5
+                    if self.empty_readings > 0: # return from empty reading to normal
+                        m.log(f'Warning: Number of empty readings: {self.empty_readings}')
+                        self.empty_readings = 0
+            else: # l is empty
+                new_check_in_time = 1
+                if self.empty_readings == 1:
+                    m.log(f'Warning: Empty readings occure.')
+                self.empty_readings += 1
 
         threading.Timer(new_check_in_time, self.read_forever).start()
 
     def autowrite(self):
         """handle command written in status. do this forever."""
-        previous_storage_mode = self.config.get_element('storage_mode')
-        f.online_write_check(self.config)
+        previous_storage_mode = self.state.get_element('storage_mode')
+        f.online_write_check(self.config, self.state)
 
         if self.status == 'run':
             self.filetime = int(time() - self.start_time)
@@ -81,14 +92,14 @@ class filemaker:
             self.filetime = 0
 
         # change of online/offline status during recording
-        if self.status == 'run' and previous_storage_mode == 'online' and self.config.get_element('storage_mode') == 'offline': # from online to offline
+        if self.status == 'run' and previous_storage_mode == 'online' and self.state.get_element('storage_mode') == 'offline': # from online to offline
             self.close_file()
             self.express = True
             self.status = 'start'
             m.log('express switch from online to offline')
 
         # change of online/offline status during recording
-        if self.status == 'run' and previous_storage_mode == 'offline' and self.config.get_element('storage_mode') == 'online': # from offline to online
+        if self.status == 'run' and previous_storage_mode == 'offline' and self.state.get_element('storage_mode') == 'online': # from offline to online
             self.close_file()
             self.express = True
             self.status = 'start'
@@ -143,7 +154,7 @@ class filemaker:
 
     def new_file(self):
         """create new file"""
-        self.destination = f.setup_record_path(self.config)
+        self.destination = f.setup_record_path(self.config, self.state)
         self.foldername = dt.datetime.now().strftime('%Y-%m-%d_%a')
         f.cc_folder(self.destination + '/' + self.foldername)
         self.filename = 'autorec_' + dt.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.wav'

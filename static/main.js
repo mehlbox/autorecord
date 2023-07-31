@@ -5,47 +5,50 @@ function get_data() {
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-            data = JSON.parse(xhttp.responseText)
-            /* fileinfo */
-            for (const [key, value] of Object.entries(data.fileinfo)) {
-                try {
-                    document.getElementById(key).innerHTML = value
-                } catch(err) {}
-            }
-            /* status */
-            for (const [key, value] of Object.entries(data.status)) {
-                if ( key == 'fileprogressbar'){ //key == 'buffer' | key == 'audiochunk' |
-                    document.getElementById(key).style.width = value + '%'
-                } else {
+                data = JSON.parse(xhttp.responseText)
+                /* fileinfo */
+                for (const [key, value] of Object.entries(data.fileinfo)) {
                     try {
                         document.getElementById(key).innerHTML = value
                     } catch(err) {}
                 }
-            }
-            /* config */
-            for (const [key, value] of Object.entries(data.config)) {
-
-                try {
-                    document.getElementById(key).value = value
-                } catch(err) {}
-            }
-            /* main */
-            for (const [key, value] of Object.entries(data)) {
-                if (key == 'gpio'){
-                    if (value == 1) {
-                        document.getElementById(key).classList.remove("led-red");
-                        document.getElementById(key).classList.add("led-green");
+                /* status */
+                for (const [key, value] of Object.entries(data.status)) {
+                    if ( key == 'fileprogressbar'){ //key == 'buffer' | key == 'audiochunk' |
+                        document.getElementById(key).style.width = value + '%'
                     } else {
-                        document.getElementById(key).classList.remove("led-green");
-                        document.getElementById(key).classList.add("led-red");
+                        try {
+                            document.getElementById(key).innerHTML = value
+                        } catch(err) {}
                     }
-                } else {
+                }
+                /* config */
+                for (const [key, value] of Object.entries(data.config)) {
                     try {
-                        document.getElementById(key).innerHTML = value
+                        if (key == 'storage_mode') {
+                            document.getElementById(key).innerHTML = value
+                        } else {
+                            document.getElementById(key).value = value
+                        }
                     } catch(err) {}
                 }
-            }
-            set_status(data.status.status)
+                /* main */
+                for (const [key, value] of Object.entries(data)) {
+                    if (key == 'gpio'){
+                        if (value == 1) {
+                            document.getElementById(key).classList.remove("led-red");
+                            document.getElementById(key).classList.add("led-green");
+                        } else {
+                            document.getElementById(key).classList.remove("led-green");
+                            document.getElementById(key).classList.add("led-red");
+                        }
+                    } else {
+                        try {
+                            document.getElementById(key).innerHTML = value
+                        } catch(err) {}
+                    }
+                }
+                set_status(data.status.status)
             }
         };
         xhttp.open("POST", "get_all_data", true);
@@ -91,9 +94,7 @@ function set_settings() {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             data = JSON.parse(xhttp.responseText)
-            //console.log(data)
             for (const [key, value] of Object.entries(data)) {
-                //console.log(key)
                 try {
                     document.getElementById(key).value = value
                 } catch(err) {}
@@ -179,6 +180,12 @@ async function populateSchedule() {
     var jsonData = await fetchJSONData("get_schedule");
     var table = document.getElementById("feiertage");
     drawMatrix(jsonData.schedule_matrix);
+    table.innerHTML  =  "<thead>\
+                            <tr>\
+                            <th>Datum</th>\
+                            <th>Feiertag</th>\
+                            </tr>\
+                        </thead>"
 
     for (var date in jsonData.holidays) {
         var row = document.createElement("tr");

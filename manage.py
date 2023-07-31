@@ -2,6 +2,23 @@ import json
 import alsaaudio as aa
 from datetime import datetime as dt, timedelta as td
 
+class manage_state:
+    
+    def __init__(self):
+        self.status_data = {}
+        self.status_data['storage_mode'] = 'offline'
+            
+    def get_element(self, element):
+        return self.status_data[element]
+
+    def get_all(self):
+        return self.status_data
+
+    def set_element(self, element, status):
+        if self.status_data[element] != status: # prevent regular write action
+            self.status_data[element] = status
+            log(f'status element "{element}" was set to "{status}"')
+
 
 class manage_config:
 
@@ -44,7 +61,6 @@ class manage_config:
         
         # always default
         self.config_data['recpath'] = ''
-        self.config_data['storage_mode'] = 'offline'
         self.config_data['initial_status'] = 'standby' # standby -> start -> run -> stop -> standby
 
 
@@ -87,7 +103,6 @@ class manage_config:
         new_data['bit_depth']           = self.config_data['bit_depth']
         new_data['sample_rate']         = self.config_data['sample_rate']
         new_data['file_limit']          = self.config_data['file_limit']
-        new_data['storage_mode']        = self.config_data['storage_mode']
         return new_data
 
     def set_element(self, element, config):
