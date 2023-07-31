@@ -3,7 +3,7 @@ from time import time, strftime, gmtime, sleep
 import json
 import datetime as dt
 import subprocess
-
+import ipaddress
 import manage as m
 
 def timer_func(func):
@@ -15,6 +15,27 @@ def timer_func(func):
         print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s')
         return result
     return wrap_func
+
+def ip_check(ip_address):
+    # Define local subnet IP ranges
+    local_subnets = [
+        ipaddress.IPv4Network('10.0.0.0/8'),
+        ipaddress.IPv4Network('172.16.0.0/12'),
+        ipaddress.IPv4Network('192.168.0.0/16'),
+    ]
+
+    # Convert the IP address to an IPv4Address object
+    try:
+        ip_addr = ipaddress.IPv4Address(ip_address)
+    except ipaddress.AddressValueError:
+        return False
+
+    # Check if the IP address is within any of the local subnets
+    for subnet in local_subnets:
+        if ip_addr in subnet:
+            return True
+
+    return False
 
 
 def check_power_supply():

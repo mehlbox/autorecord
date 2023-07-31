@@ -14,6 +14,23 @@ log_control.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 
+# decorator function
+def require_local_ip(func):
+    def wrapper(*args, **kwargs):
+        requester_ip = request.remote_addr
+
+        # Check if the requester's IP is local
+        if not f.ip_check(requester_ip):
+            return json.dumps({'error': 'Access denied. Only local IP addresses are allowed.'}), 403
+
+        # Call the original function
+        return func(*args, **kwargs)
+
+    # Preserve the name and docstring of the original function
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+
+    return wrapper
 
 @app.route('/')
 def main():
@@ -37,11 +54,14 @@ def get_schedule():
     data['weekdays'], data['holidays'], data['schedule_matrix'] = f.is_allowed(config, True)
     return json.dumps(data, indent=4)
 
+
 @app.route('/get_log', methods=['GET'])
 def get_log():
     return Response(m.get_log(), content_type='text/plain')
 
+
 @app.route('/set_config', methods=['POST'])
+@require_local_ip
 def set_config(): # config applies on reboot
     data = dict(request.json)
     data['sample_rate'] = int(data['sample_rate'])
@@ -49,10 +69,11 @@ def set_config(): # config applies on reboot
     temp = dict(config.get_all())
     temp.update(data)
     config.set_all(temp)
-    #exit_recorder()
     return json.dumps(config.get_all())
 
+
 @app.route('/exit', methods=['POST'])
+@require_local_ip
 def exit_recorder():
     try:
         m.log("called exit")
@@ -70,6 +91,7 @@ def exit_recorder():
         return {'status':'error', 'error_message':e}
 
 @app.route('/reboot', methods=['POST'])
+@require_local_ip
 def reboot():
     try:
         m.log('system reboot called')
@@ -79,6 +101,7 @@ def reboot():
         return {'status':'error', 'error_message':e}
 
 @app.route('/call_split', methods=['POST'])
+@require_local_ip
 def call_split():
     m.log('file split called')
     autorecorder.write_file()
@@ -96,6 +119,7 @@ def send_matrix():
     return json.dumps(new_matrix), 200
 
 @app.route('/matrix', methods=['POST'])
+@require_local_ip
 def receive_matrix():
     new_matrix = {}
     weekdays = config.get_element('weekdays')

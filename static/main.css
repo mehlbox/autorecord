@@ -156,3 +156,18 @@ body {
     border-right: 1px solid black;
     text-align: center;
   }
+
+
+/* status bar */
+  .container {
+    display: flex;
+  }
+
+  .status {
+    text-align: center;
+    line-height: 8px;
+    padding: 1em;
+    border: 2px solid rgb(75, 75, 75);
+    border-radius: 25px;
+    margin-right: 8px;
+  }
