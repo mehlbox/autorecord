@@ -23,6 +23,7 @@ class filemaker:
         self.actual_filetime = 0
         self.start_time = 0
         self.lostpackages = 0
+        self.empty_readings = 0
         self.status = self.config.get_element('initial_status')
         self.check_in_time = self.config.get_element('check_in_time')
         self.maxaudiochunk = 0
@@ -64,9 +65,14 @@ class filemaker:
             else:
                 if l: # l is not empty
                     self.audio = self.audio + data # accumulate audio stream
+                    if self.empty_readings != 0:
+                        m.log(f'warning: count of empty readings: {self.empty_readings}')
+                        self.empty_readings = 0
                 else: # l is empty
-                    m.log('warning: reading from empty audiocard.') # this might crash the audiocard
                     new_check_in_time = 0.5
+                    self.empty_readings += 1
+                    if self.empty_readings == 1:
+                        m.log('warning: reading from empty audiocard.') # this might crash the audiocard
 
         threading.Timer(new_check_in_time, self.read_forever).start()
 
