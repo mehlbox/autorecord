@@ -94,9 +94,7 @@ function set_settings() {
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             data = JSON.parse(xhttp.responseText)
-            //console.log(data)
             for (const [key, value] of Object.entries(data)) {
-                //console.log(key)
                 try {
                     document.getElementById(key).value = value
                 } catch(err) {}
@@ -182,6 +180,12 @@ async function populateSchedule() {
     var jsonData = await fetchJSONData("get_schedule");
     var table = document.getElementById("feiertage");
     drawMatrix(jsonData.schedule_matrix);
+    table.innerHTML  =  "<thead>\
+                            <tr>\
+                            <th>Datum</th>\
+                            <th>Feiertag</th>\
+                            </tr>\
+                        </thead>"
 
     for (var date in jsonData.holidays) {
         var row = document.createElement("tr");
