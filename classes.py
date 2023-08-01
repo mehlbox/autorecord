@@ -1,4 +1,3 @@
-import os
 import sys
 import datetime as dt
 import threading
@@ -100,7 +99,7 @@ class filemaker:
             self.status = 'start'
             m.log('express switch from offline to online')
         
-        if self.status == 'standby' and self.sw.get_status() == 'start' and f.is_allowed(self.config):
+        if self.status == 'standby' and self.sw.get_status() == 'on' and f.is_allowed(self.config):
             self.status = 'start'
             m.log('switch standby to start')
 
@@ -120,7 +119,7 @@ class filemaker:
         if self.status == 'run':
             self.write_file()
 
-        if self.status == 'run' and (self.sw.get_status() == 'stop' or not f.is_allowed(self.config)):
+        if self.status == 'run' and (self.sw.get_status() == 'off' or not f.is_allowed(self.config)):
             self.status = 'stop'
             m.log('switch run to stop')
 
@@ -252,22 +251,21 @@ class debouncePin:
             self.set_status(self.debounced_state)
         threading.Timer(self.bouncetime / 10, self.check_forever).start()
 
-    def invert(self, status):
+    def invert(self, state):
         if self.pin_invert:
-            if status:
+            if state:
                 return False
             else:
                 return True
-        return status
+        return state
 
-    def set_status(self, status):
+    def set_status(self, state):
 
-        if status == 1:
-            self.action_state = 'start'
-            m.log('set gpio status to start')
+        if state == 1:
+            self.action_state = 'on'
         else:
-            self.action_state = 'stop'
-            m.log('set gpio status to stop')
+            self.action_state = 'off'
+        m.log(f'Set gpio state to: {self.action_state}')
 
     def get_status(self):
         return self.action_state

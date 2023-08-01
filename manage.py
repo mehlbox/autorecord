@@ -1,13 +1,15 @@
 import json
 import alsaaudio as aa
 from datetime import datetime as dt, timedelta as td
+import os
 
+dirname = os.path.dirname(__file__)
 
 class manage_config:
 
     def __init__(self):
         """load configuration from json file"""
-        self.fileNamePath = '/audio/settings.json'
+        self.fileNamePath = f'{dirname}/settings.json'
         try:
             log(self.config_data)
         except:
@@ -107,7 +109,7 @@ class manage_config:
 
 def get_log():
     try:
-        with open("/audio/autorecord.log", "r") as file:
+        with open(f"{dirname}/autorecord.log", "r") as file:
             return file.read()
     except:
         return 'unable to read logfile !!!'
@@ -115,11 +117,11 @@ def get_log():
 def log(message):
     now = dt.now().strftime("%a, %d %b %Y %H:%M:%S")
     print(message)
-    with open("/audio/autorecord.log", "a") as file:
+    with open(f"{dirname}/autorecord.log", "a") as file:
         file.write(f"{now}: {message}\n")
 
 def log_cleanup():
-    log_file_path = '/audio/autorecord.log'
+    log_file_path = f'{dirname}/autorecord.log'
 
     # Calculate the date two weeks ago from the current date
     two_weeks_ago = dt.now() - td(weeks=2)

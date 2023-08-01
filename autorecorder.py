@@ -9,6 +9,8 @@ import json
 import logging
 import socket
 
+dirname = os.path.dirname(__file__)
+
 log_control = logging.getLogger('werkzeug')
 log_control.setLevel(logging.ERROR)
 
@@ -85,7 +87,7 @@ def exit_recorder():
 
         pid = str(os.getpid())
         pid_web = str(webserver.native_id)
-        r = os.system(f'/audio/restart.py {pid} {pid_web}')
+        r = os.system(f'{dirname}/restart.py {pid} {pid_web}')
         return {'status':'OK', 'return_code': r}
     except Exception as e:
         return {'status':'error', 'error_message':e}
@@ -103,10 +105,13 @@ def reboot():
 @app.route('/call_split', methods=['POST'])
 @require_local_ip
 def call_split():
-    m.log('file split called')
-    autorecorder.write_file()
-    autorecorder.close_file()
-    autorecorder.new_file()
+    if autorecorder.status == 'run':
+        m.log('manual file split')
+        autorecorder.write_file()
+        autorecorder.close_file()
+        autorecorder.new_file()
+    else:
+        m.log('manual file split ignored (wrong status)')
     return {'status':'OK'}
 
 @app.route('/matrix', methods=['get'])

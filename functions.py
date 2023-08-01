@@ -1,6 +1,5 @@
 import os
-from time import time, strftime, gmtime, sleep
-import json
+from time import time, sleep
 import datetime as dt
 import subprocess
 import ipaddress
@@ -71,7 +70,10 @@ def online_write_check(config):
     
     if os.path.ismount(config.get_element('recpath_online') ):
         try: # try to write
-            open(config.get_element('recpath_online') + '/autorecord_write_check.tmp', 'w')
+            tempfile = f"""{config.get_element('recpath_online')}/autorecord_write_check.tmp"""
+            with open(tempfile, "w"):
+                pass
+            os.remove(tempfile)
         except IOError:
             config.set_element('storage_mode', 'offline')
             return False
