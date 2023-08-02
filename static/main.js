@@ -205,18 +205,23 @@ async function populateSchedule() {
     }
 }
 
-// Function to populate the table with the JSON data
+// Function to populate the log textarea
 async function populateLog() {
+    var textarea = document.getElementById("log");
     try {
-      var response = await fetch('get_log');
-      var logData = await response.text();
-      
-      var textarea = document.getElementById("log");
-      textarea.value = logData;
+        var response = await fetch('get_log');
+        var logData = await response.text();
+        textarea.value = logData;        
+        setTimeout(function () {
+            textarea.scrollTop = textarea.scrollHeight;
+          }, 100); // Add a slight delay to allow rendering before scrolling down
     } catch (error) {
-      console.error('Error fetching log data:', error);
+        console.error('Error fetching log data:', error);
+        textarea.value = 'Error fetching log data:' + error;
+
     }
   }
+
 
 // Get the content element by its id
 var container = document.getElementById('container');

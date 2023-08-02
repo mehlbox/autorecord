@@ -93,14 +93,17 @@ class manage_config:
         return new_data
 
     def set_element(self, element, config):
-        if self.config_data[element] != config: # prevent regular write action
+        if self.config_data[element] != config: # prevent unnecessary write action
             self.config_data[element] = config
-            log(f'config element "{element}" was set to "{config}"')
+            if element != 'schedule_matrix':
+                log(f'config element "{element}" was set to "{config}"')
+            else:
+                log(f'config element "{element}" was changed')
             with open(self.fileNamePath, 'w') as f:
                 f.write(json.dumps(self.config_data, indent=4))
 
     def set_all(self, config):
-        if self.config_data != config: # prevent regular write action
+        if self.config_data != config: # prevent unnecessary write action
             log(f'set all with {config}')
             self.config_data = config
             with open(self.fileNamePath, 'w') as f:
