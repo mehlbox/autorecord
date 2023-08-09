@@ -39,15 +39,16 @@ class manage_config:
         self.__load__('file_limit', 600)
         self.__load__('device', 'sysdefault:CARD=sndrpihifiberry')
 
+        self.__load__('admin', True)
         self.__load__('http_port', 80)
         self.__load__('gpio_pin', 22)
         self.__load__('gpio_invert', False)
         self.__load__('gpio_debouncing', 30) # time in seconds
-        
-        # always default
+
+        # default on bootup
         self.config_data['recpath'] = ''
         self.config_data['storage_mode'] = 'offline'
-        self.config_data['initial_status'] = 'standby' # standby -> start -> run -> stop -> standby
+        self.config_data['initial_status'] = 'standby'
 
 
         if self.config_data['bit_depth'] == '16 bit':
@@ -56,6 +57,10 @@ class manage_config:
         if self.config_data['bit_depth'] == '24 bit':
             self.config_data['audio_format'] = aa.PCM_FORMAT_S24_LE
             self.config_data['byte_depth'] = 3 # 3 bytes -> 24 bit
+        if self.config_data['bit_depth'] == '32 bit':
+            self.config_data['audio_format'] = aa.PCM_FORMAT_S32_LE
+            self.config_data['byte_depth'] = 4 # 4 bytes -> 32 bit
+
 
         # calculate rest of the configuration
         self.config_data['period_size'] = int(self.config_data['sample_rate'] * 2 * 0.1)
@@ -72,7 +77,7 @@ class manage_config:
             for weekday in self.config_data['weekdays']:
                 self.config_data['schedule_matrix'][weekday] = [True] * 24
 
-        
+
     def __load__(self, element, default):
         """load element and set default if element is not available"""
         if not element in self.config_data:
@@ -83,7 +88,7 @@ class manage_config:
 
     def get_all(self):
         return self.config_data
-    
+
     def get_status(self):
         new_data = {}
         new_data['bit_depth']           = self.config_data['bit_depth']
@@ -108,7 +113,7 @@ class manage_config:
             self.config_data = config
             with open(self.fileNamePath, 'w') as f:
                 f.write(json.dumps(self.config_data, indent=4))
-    
+
 
 def get_log():
     try:

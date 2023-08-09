@@ -29,12 +29,12 @@ class filemaker:
         self.audio = b''
         self.express = ''
         self.do_maintenance = True
-        
+
         self.sw = debouncePin(self.config.get_element('gpio_pin'), self.config.get_element('gpio_debouncing'), self.config.get_element('gpio_invert'))
         self.sw.check_forever()
-        
+
         self.read_forever()
-        
+
     def get_sw(self):
         return self.sw.read()
 
@@ -44,6 +44,9 @@ class filemaker:
     def stop(self):
         self.status = 'stop'
         self.lostpackages = 0
+        if self.empty_readings != 0:
+            m.log(f'warning: count of empty readings after stop: {self.empty_readings}')
+            self.empty_readings = 0
 
     def read_forever(self):
         """read from audiocard to ram, loop forever to prevent audiocard cache to fill up.
@@ -65,7 +68,7 @@ class filemaker:
                 if l: # l is not empty
                     self.audio = self.audio + data # accumulate audio stream
                     if self.empty_readings != 0:
-                        m.log(f'warning: count of empty readings: {self.empty_readings}')
+                        m.log(f'warning: count of empty readings during recording: {self.empty_readings}')
                         self.empty_readings = 0
                 else: # l is empty
                     new_check_in_time = 0.5
@@ -98,7 +101,7 @@ class filemaker:
             self.express = True
             self.status = 'start'
             m.log('express switch from offline to online')
-        
+
         if self.status == 'standby' and self.sw.get_status() == 'on' and f.is_allowed(self.config):
             self.status = 'start'
             m.log('switch standby to start')
@@ -120,7 +123,7 @@ class filemaker:
             self.write_file()
 
         if self.status == 'run' and (self.sw.get_status() == 'off' or not f.is_allowed(self.config)):
-            self.status = 'stop'
+            self.stop()
             m.log('switch run to stop')
 
         if self.status == 'stop':
@@ -171,7 +174,7 @@ class filemaker:
             except Exception as error:
                 m.log('error: could not write into audio file')
                 m.log(error)
-            
+
             self.actual_filetime = int(self.file.tell()/self.config.get_element('sample_rate')) # filetime in seconds
             if self.actual_filetime >= self.config.get_element('file_limit'):
                 m.log('filelimit reached"') 

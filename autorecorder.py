@@ -34,6 +34,27 @@ def require_local_ip(func):
 
     return wrapper
 
+
+
+# decorator function
+def require_admin(func):
+    def wrapper(*args, **kwargs):
+        requester_ip = request.remote_addr
+
+        # Check
+        if not config.get_element('admin'):
+            return json.dumps({'error': 'Access denied. Admin functions are disabeled.'}), 403
+
+        # Call the original function
+        return func(*args, **kwargs)
+
+    # Preserve the name and docstring of the original function
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+
+    return wrapper
+
+
 @app.route('/')
 def main():
     return render_template('index.html')
@@ -64,6 +85,7 @@ def get_log():
 
 @app.route('/set_config', methods=['POST'])
 @require_local_ip
+@require_admin
 def set_config(): # config applies on reboot
     data = dict(request.json)
     data['sample_rate'] = int(data['sample_rate'])
@@ -80,7 +102,7 @@ def exit_recorder():
     try:
         m.log("called exit")
         autorecorder.status = 'exit'
-        
+
         if hasattr(autorecorder, 'file'):
             autorecorder.write_file()
             autorecorder.close_file()
@@ -125,6 +147,7 @@ def send_matrix():
 
 @app.route('/matrix', methods=['POST'])
 @require_local_ip
+@require_admin
 def receive_matrix():
     new_matrix = {}
     weekdays = config.get_element('weekdays')
@@ -151,8 +174,9 @@ if __name__ == '__main__':
         import classes as c
         import manage as m
 
+
         config = m.manage_config()
-        
+
         # webserver
         webserver = threading.Thread(target=lambda: app.run(host='0.0.0.0', debug=True, use_reloader=False, port=config.get_element('http_port')))
         webserver.start()
