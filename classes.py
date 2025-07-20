@@ -3,6 +3,8 @@ import datetime as dt
 import threading
 import RPi.GPIO as GPIO
 import wave
+import os
+import shutil
 import alsaaudio as aa
 from time import time, strftime, gmtime
 
@@ -167,19 +169,41 @@ class filemaker:
         threading.Timer(callagain, self.autowrite).start()
 
     def new_file(self):
-        """create new file"""
+        """create new file if there's enough disk space"""
+        # figure out required bytes: sample_rate × channels × bytes_per_sample × seconds
+        sr      = self.config.get_element('sample_rate')
+        chans   = self.config.get_element('num_channels')
+        bps     = self.config.get_element('byte_depth')
+        seconds = self.config.get_element('file_limit')
+        required_bytes = sr * chans * bps * seconds
+
+        # ensure destination path exists (so we can query its FS)
         self.destination = f.setup_record_path(self.config)
+        os.makedirs(self.destination, exist_ok=True)
+
+        # check free space
+        st = shutil.disk_usage(self.destination)
+        free = st.free
+        if free < required_bytes:
+            m.log(f'error: insufficient disk space ({free} bytes free, need ~{required_bytes} bytes)')
+            # gracefully bail—keep status = 'start' so we’ll retry later
+            return
+
+        # everything’s ok, proceed
         self.foldername = dt.datetime.now().strftime('%Y-%m-%d_%a')
-        f.cc_folder(self.destination + '/' + self.foldername)
+        f.cc_folder(os.path.join(self.destination, self.foldername))
         self.filename = 'autorec_' + dt.datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.wav'
-        self.fullpath = self.destination + '/' + self.foldername + '/' + self.filename
-        self.file = wave.open(self.fullpath, "wb") # open new file
-        self.file.setframerate(self.config.get_element('sample_rate'))
-        self.file.setnchannels(self.config.get_element('num_channels'))
-        self.file.setsampwidth(self.config.get_element('byte_depth'))
-        self.start_time = time()
-        self.filetime = 0
-        self.actual_filetime = 0
+        self.fullpath = os.path.join(self.destination, self.foldername, self.filename)
+
+        # open the WAV and set header params
+        self.file = wave.open(self.fullpath, "wb")
+        self.file.setframerate(sr)
+        self.file.setnchannels(chans)
+        self.file.setsampwidth(bps)
+
+        self.start_time       = time()
+        self.filetime         = 0
+        self.actual_filetime  = 0
         m.log(f'File: "{self.fullpath}" created')
 
 
