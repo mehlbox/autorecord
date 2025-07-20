@@ -6,7 +6,7 @@ import wave
 import os
 import shutil
 import alsaaudio as aa
-from time import time, strftime, gmtime
+from time import time, strftime, gmtime, sleep
 
 import functions as f
 import manage as m
@@ -90,11 +90,11 @@ class filemaker:
                         m.log('warning: empty read from audiocard')
 
                 # block for the remainder of this period
-                time.sleep(self._loop_interval)
+                sleep(self._loop_interval)
 
             else:
                 # not running: check back later
-                time.sleep(self.check_in_time)
+                sleep(self.check_in_time)
 
 
     def autowrite(self):
