@@ -33,7 +33,7 @@ class filemaker:
         self.sw = debouncePin(self.config.get_element('gpio_pin'), self.config.get_element('gpio_debouncing'), self.config.get_element('gpio_invert'))
         self.sw.check_forever()
 
-        self.read_forever()
+        self.start_capture()
 
     def get_sw(self):
         return self.sw.read()
@@ -48,35 +48,52 @@ class filemaker:
             m.log(f'warning: count of empty readings after stop: {self.empty_readings}')
             self.empty_readings = 0
 
-    def read_forever(self):
-        """read from audiocard to ram, loop forever to prevent audiocard cache to fill up.
-        if the cache of the audiocard is filled, audio samples will get lost"""
 
-        new_check_in_time = self.check_in_time
-        if self.status == 'run':
-            try:
-                l, data = self.audiocard.read()
-                self.buffer = l
-            except Exception as error:
-                m.log('error: could not read from audiocard')
-                m.log(error)
+    def start_capture(self):
+        """Call this once after opening the device to start the background loop."""
+        self._compute_intervals()
+        t = threading.Thread(target=self._capture_loop, daemon=True)
+        t.start()
 
-            if l == -32: # Package lost, no data
-                self.lostpackages += 1
-                m.log('warning: lost a audio package')
-            else:
-                if l: # l is not empty
-                    self.audio = self.audio + data # accumulate audio stream
-                    if self.empty_readings != 0:
-                        m.log(f'warning: count of empty readings during recording: {self.empty_readings}')
+    def _compute_intervals(self):
+        rate   = self.config.get_element('sample_rate')
+        period = self.config.get_element('period_size')
+        # wake at 90% of one period
+        self._loop_interval = (period / rate) * 0.9
+
+    def _capture_loop(self):
+        """Runs in its own thread forever."""
+        while True:
+            if self.status == 'run':
+                try:
+                    length, data = self.audiocard.read()
+                except aa.ALSAAudioError as e:
+                    m.log(f"warning: underrun, recovering → {e}")
+                    self.audiocard.prepare()
+                    length, data = 0, b''
+
+                self.buffer = length
+
+                if length == -32:
+                    self.lostpackages += 1
+                    m.log('warning: lost an audio package')
+                elif length > 0:
+                    self.audio += data
+                    if self.empty_readings:
+                        m.log(f'warning: cleared {self.empty_readings} empty reads')
                         self.empty_readings = 0
-                else: # l is empty
-                    new_check_in_time = 0.5
+                else:
                     self.empty_readings += 1
                     if self.empty_readings == 1:
-                        m.log('warning: reading from empty audiocard.') # this might crash the audiocard
+                        m.log('warning: empty read from audiocard')
 
-        threading.Timer(new_check_in_time, self.read_forever).start()
+                # block for the remainder of this period
+                time.sleep(self._loop_interval)
+
+            else:
+                # not running: check back later
+                time.sleep(self.check_in_time)
+
 
     def autowrite(self):
         """handle command written in status. do this forever."""
