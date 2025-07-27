@@ -157,11 +157,6 @@ function call_exit() {
     xhttp.send();
 }
 
-function show_reboot() {
-    document.getElementById('plus_button').style.display = 'none'
-    document.getElementById('hidden_reboot').style.display = 'block'
-}
-
 
 // Function to fetch the JSON data asynchronously
 async function fetchJSONData(fetch_path) {
