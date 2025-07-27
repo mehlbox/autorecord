@@ -115,12 +115,43 @@ class manage_config:
                 f.write(json.dumps(self.config_data, indent=4))
 
 
-def get_log():
+def tail(path, n=1000, encoding="utf-8", block_size=8192):
+    """Return the last n lines of a text file, tail -n style, efficiently."""
+    if n <= 0:
+        return ""
+
     try:
-        with open(f"{dirname}/autorecord.log", "r") as file:
-            return file.read()
-    except:
-        return 'unable to read logfile !!!'
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            file_size = f.tell()
+
+            # Nothing to read
+            if file_size == 0:
+                return ""
+
+            data = bytearray()
+            lines_found = 0
+            pos = file_size
+
+            while pos > 0 and lines_found <= n:
+                read_size = block_size if pos >= block_size else pos
+                pos -= read_size
+                f.seek(pos, os.SEEK_SET)
+                chunk = f.read(read_size)
+                data[:0] = chunk  # prepend
+                lines_found += chunk.count(b'\n')
+
+            # Split and keep only the last n lines
+            lines = data.splitlines()
+            tail_bytes = b"\n".join(lines[-n:])
+            return tail_bytes.decode(encoding, errors="replace")
+    except Exception as e:
+        return f"unable to read logfile !!! ({e})"
+
+
+def get_log(last=1000):
+    return tail(f"{dirname}/autorecord.log", n=last)
+
 
 def log(message):
     now = dt.now().strftime("%a, %d %b %Y %H:%M:%S")
