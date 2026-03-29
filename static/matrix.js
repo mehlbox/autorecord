@@ -171,4 +171,4 @@ function drawMatrix(data) {
     }
   }
 // Attach mouse event listeners to the table
-const table = document.querySelector('table');
+const table = document.getElementById('schedule_plan');

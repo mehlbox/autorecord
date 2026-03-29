@@ -1,5 +1,18 @@
 let update = true
 
+function setRadioValue(groupName, value) {
+    const target = String(value);
+    const radio = document.querySelector(`input[name="${groupName}"][value="${target}"]`);
+    if (radio) {
+        radio.checked = true;
+    }
+}
+
+function getRadioValue(groupName) {
+    const checked = document.querySelector(`input[name="${groupName}"]:checked`);
+    return checked ? checked.value : '';
+}
+
 function get_data() {
     if (update) {
         var xhttp = new XMLHttpRequest();
@@ -26,6 +39,8 @@ function get_data() {
             for (const [key, value] of Object.entries(data.config)) {
                 if ( key == 'storage_mode'){
                     document.getElementById(key).innerHTML = value
+                } else if (key == 'sample_rate' || key == 'bit_depth') {
+                    setRadioValue(key, value);
                 } else {
                     try {
                         document.getElementById(key).value = value
@@ -58,34 +73,25 @@ function get_data() {
 }
 
 function set_status(status) {
-    //console.log(status)
-    if (status == "standby") {
-        document.getElementById('standby').style.backgroundColor = '#71A971';
-    } else {
-        document.getElementById('standby').style.backgroundColor = "gray";
-    }
-    if (status == "start") {
-        document.getElementById('start').style.backgroundColor = '#71A971';
-    } else {
-        document.getElementById('start').style.backgroundColor = "gray";
-    }
-    if (status == "run") {
-        document.getElementById('run').style.backgroundColor = '#71A971';
-    } else {
-        document.getElementById('run').style.backgroundColor = "gray";
-    }
-    if (status == "stop") {
-        document.getElementById('stop').style.backgroundColor = '#71A971';
-    } else {
-        document.getElementById('stop').style.backgroundColor = "gray";
+    const states = ['standby', 'start', 'run', 'stop'];
+    states.forEach(state => {
+        const node = document.getElementById(state);
+        if (node) {
+            node.classList.toggle('is-active', state === status);
+        }
+    });
+
+    const root = document.getElementById('container');
+    if (root) {
+        root.classList.toggle('is-recording', status === 'run');
     }
 }
 
 function set_settings() {
 
     let data = {
-        "sample_rate" : document.getElementById('sample_rate').value,
-        "bit_depth" : document.getElementById('bit_depth').value,
+        "sample_rate" : getRadioValue('sample_rate'),
+        "bit_depth" : getRadioValue('bit_depth'),
         "file_limit" : document.getElementById('file_limit').value,
     }
     data = JSON.stringify(data)
@@ -95,6 +101,10 @@ function set_settings() {
         if (this.readyState == 4 && this.status == 200) {
             data = JSON.parse(xhttp.responseText)
             for (const [key, value] of Object.entries(data)) {
+                if (key == 'sample_rate' || key == 'bit_depth') {
+                    setRadioValue(key, value);
+                    continue;
+                }
                 try {
                     document.getElementById(key).value = value
                 } catch(err) {}
@@ -227,21 +237,16 @@ var menuItems = document.querySelectorAll('.nav-link');
 // Attach event listener to each menu item
 menuItems.forEach(function(item) {
     item.addEventListener('click', function() {
-        // Set the width of the content element
         if (item.id == "pills-status-tab") {
-            container.style.maxWidth = 25 + 'rem';
             update = true;
         }
         if (item.id == "pills-schedule-tab") {
-            container.style.maxWidth = 50 + 'rem';
             update = false;    
         }
         if (item.id == "pills-admin-tab") {
-            container.style.maxWidth = 25 + 'rem';
             update = false;    
         }
         if (item.id == "pills-log-tab") {
-            container.style.maxWidth = 70 + 'rem';
             update = false;    
         }
     });
