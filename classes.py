@@ -128,17 +128,12 @@ class filemaker:
                         self._capture_poll_failed = True
                     self._capture_poll = None
                     events = []
-
-                if not events:
-                    continue
-
-                try:
-                    revents = self.audiocard.polldescriptors_revents(events)
-                    if not (revents & select.POLLIN):
-                        continue
-                except Exception:
-                    # If revents cannot be decoded, still attempt a read.
-                    pass
+                # Some ALSA/driver combos do not report POLLIN reliably via
+                # polldescriptors_revents(); still attempt timed reads.
+                if events:
+                    for _, eventmask in events:
+                        if eventmask & (select.POLLERR | select.POLLHUP | select.POLLNVAL):
+                            m.log(f'warning: ALSA poll event mask={eventmask}, trying recovery read')
 
             # Read all currently available periods before sleeping again.
             had_data = False
@@ -363,6 +358,10 @@ class filemaker:
                     m.log('error: could not write into audio file')
                     m.log(error)
                     break
+                try:
+                    self.file._file.flush()
+                except Exception:
+                    pass
 
                 chunk = chunk[len(part):]
 
