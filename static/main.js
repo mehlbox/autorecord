@@ -1,4 +1,34 @@
 let update = true
+const THEME_STORAGE_KEY = 'autorecord_theme';
+
+function applyTheme(themeName) {
+    const normalized = themeName === 'modern' ? 'modern' : 'vintage';
+    document.documentElement.setAttribute('data-theme', normalized);
+
+    const vintageBtn = document.getElementById('theme_vintage');
+    const modernBtn = document.getElementById('theme_modern');
+    if (vintageBtn) {
+        vintageBtn.classList.toggle('is-active', normalized === 'vintage');
+    }
+    if (modernBtn) {
+        modernBtn.classList.toggle('is-active', normalized === 'modern');
+    }
+}
+
+function setTheme(themeName) {
+    applyTheme(themeName);
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, themeName);
+    } catch(err) {}
+}
+
+function initTheme() {
+    let saved = 'vintage';
+    try {
+        saved = localStorage.getItem(THEME_STORAGE_KEY) || 'vintage';
+    } catch(err) {}
+    applyTheme(saved);
+}
 
 function setRadioValue(groupName, value) {
     const target = String(value);
@@ -253,4 +283,5 @@ menuItems.forEach(function(item) {
 });
 
 
+initTheme();
 get_data();
