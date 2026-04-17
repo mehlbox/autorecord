@@ -173,11 +173,14 @@ class filemaker:
                 # length == 0 on non-blocking reads means no more buffered periods right now
                 break
 
-            if not had_data and self._capture_poll is None:
+            if not had_data:
                 self.empty_readings += 1
                 if self.empty_readings == 1:
                     m.log('warning: empty read from audiocard')
-                sleep(self.check_in_time)
+                elif self.empty_readings % 200 == 0:
+                    m.log(f'error: {self.empty_readings} consecutive empty reads — capture device is delivering no audio data (check S/PDIF input signal and PLL lock)')
+                if self._capture_poll is None:
+                    sleep(self.check_in_time)
 
     def autowrite(self):
         """handle command written in status. do this forever."""
